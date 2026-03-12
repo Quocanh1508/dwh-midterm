@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: retail_raw
+    database: "{{ env_var('GCP_PROJECT_ID') }}"
+    schema: "{{ env_var('BQ_DATASET_RAW', 'retail_raw') }}"
+    tables:
+      - name: orders
+      - name: order_items
+      - name: products
+      - name: users

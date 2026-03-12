@@ -1,0 +1,53 @@
+version: 2
+
+models:
+  - name: fact_sales
+    description: "Central fact table tracking individual order items and sales metrics"
+    columns:
+      - name: order_item_id
+        description: "Primary key"
+        tests:
+          - unique
+          - not_null
+      - name: customer_key
+        description: "Foreign key to dim_customer"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_key
+      - name: product_key
+        description: "Foreign key to dim_product"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_product')
+              field: product_key
+      - name: sale_price
+        description: "Revenue from the sale"
+        tests:
+          - not_null
+
+  - name: dim_customer
+    description: "Customer dimension"
+    columns:
+      - name: customer_key
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_product
+    description: "Product dimension"
+    columns:
+      - name: product_key
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_date
+    description: "Date dimension"
+    columns:
+      - name: date_key
+        tests:
+          - unique
+          - not_null

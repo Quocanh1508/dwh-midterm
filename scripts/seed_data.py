@@ -114,16 +114,18 @@ def truncate_table(table_id: str) -> None:
 
 def seed_table(table_id: str, source: str, cols: str, limit: int) -> None:
     target = f"`{PROJECT_ID}.{DATASET_RAW}.{table_id}`"
+    limit_clause = f"LIMIT {limit}" if limit > 0 else ""
     sql = f"""
         INSERT INTO {target}
         SELECT
             {cols}
         FROM {source}
-        LIMIT {limit}
+        {limit_clause}
     """
     job = client.query(sql)
     job.result()
-    print(f"  ✅ Seeded {DATASET_RAW}.{table_id}  ({limit:,} rows max)")
+    desc = f"{limit:,} rows max" if limit > 0 else "all rows"
+    print(f"  ✅ Seeded {DATASET_RAW}.{table_id}  ({desc})")
 
 
 def main(limit: int) -> None:

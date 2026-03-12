@@ -1,0 +1,54 @@
+version: 2
+
+models:
+  - name: stg_orders
+    description: "Cleaned and deduplicated orders"
+    columns:
+      - name: order_id
+        description: "Primary key for orders"
+        tests:
+          - unique
+          - not_null
+      - name: user_id
+        description: "Foreign key to users"
+        tests:
+          - not_null
+      - name: order_status
+        description: "Status of the order"
+        tests:
+          - accepted_values:
+              values: ['CANCELLED', 'COMPLETE', 'PROCESSING', 'RETURNED', 'SHIPPED']
+
+  - name: stg_order_items
+    description: "Cleaned and deduplicated order items"
+    columns:
+      - name: order_item_id
+        description: "Primary key for order items"
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: "Foreign key to orders"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_orders')
+              field: order_id
+
+  - name: stg_products
+    description: "Cleaned and deduplicated products"
+    columns:
+      - name: product_id
+        description: "Primary key for products"
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_users
+    description: "Cleaned and deduplicated users"
+    columns:
+      - name: user_id
+        description: "Primary key for users"
+        tests:
+          - unique
+          - not_null

@@ -1,0 +1,23 @@
+name: 'retail_dwh'
+version: '1.0.0'
+config-version: 2
+
+profile: 'retail_dwh'
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  retail_dwh:
+    staging:
+      +schema: retail_staging
+      +materialized: view
+    marts:
+      +schema: retail_marts
+      +materialized: table
