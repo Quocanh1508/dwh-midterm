@@ -50,4 +50,7 @@ jobs:
       - name: Great Expectations (Marts Data)
         run: python scripts/run_ge.py mart_checkpoint
 
+      - name: Performance Tests (BigQuery EXPLAIN Cost check)
+        run: python performance/explain_runner.py
+
       # A future step will be added here for alerting (Discord/Slack)

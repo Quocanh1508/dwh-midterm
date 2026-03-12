@@ -56,5 +56,7 @@ jobs:
           python scripts/run_ge.py raw_checkpoint
           python scripts/run_ge.py mart_checkpoint
 
-      # Performance Testing / Explain runner will go here in Phase 6
+      - name: Performance Tests (BigQuery EXPLAIN Cost check)
+        run: python performance/explain_runner.py
+
       # Webhook alerting will go here in Phase 7
