@@ -53,4 +53,16 @@ jobs:
       - name: Performance Tests (BigQuery EXPLAIN Cost check)
         run: python performance/explain_runner.py
 
-      # A future step will be added here for alerting (Discord/Slack)
+      - name: Alert on Success
+        if: success()
+        run: |
+          echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> .env
+          echo "SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}" >> .env
+          python scripts/alert_webhook.py success "✅ PR Validation Passed: dbt & GE tests are green!"
+
+      - name: Alert on Failure
+        if: failure()
+        run: |
+          echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> .env
+          echo "SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}" >> .env
+          python scripts/alert_webhook.py failure "❌ PR Validation Failed: Check GitHub Actions logs."
