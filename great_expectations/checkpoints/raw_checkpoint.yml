@@ -1,0 +1,28 @@
+name: raw_checkpoint
+config_version: 1.0
+template_name:
+module_name: great_expectations.checkpoint
+class_name: Checkpoint
+run_name_template: '%Y%m%d-%H%M%S-raw-checkpoint'
+expectation_suite_name:
+batch_request: {}
+action_list:
+  - name: store_validation_result
+    action:
+      class_name: StoreValidationResultAction
+  - name: store_evaluation_params
+    action:
+      class_name: StoreEvaluationParametersAction
+  - name: update_data_docs
+    action:
+      class_name: UpdateDataDocsAction
+evaluation_parameters: {}
+runtime_configuration: {}
+validations:
+  - batch_request:
+      datasource_name: retail_dwh
+      data_connector_name: default_configured_data_connector_name
+      data_asset_name: retail_raw.orders
+      data_connector_query:
+        index: -1
+    expectation_suite_name: raw_orders_suite
