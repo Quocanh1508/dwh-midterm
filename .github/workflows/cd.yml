@@ -28,7 +28,7 @@ jobs:
         env:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
         run: |
-          echo "$GCP_SA_KEY" > /tmp/gcp_key.json
+          python -c "import os; f=open('/tmp/gcp_key.json', 'w'); f.write(os.environ['GCP_SA_KEY']); f.close()"
         
       - name: Generate .env file
         run: |
