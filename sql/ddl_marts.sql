@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS `dwh-midterm-123456.retail_marts.dim_date` (
 OPTIONS (description = "Date dimension – pre-populated via seed script");
 
 -- ── DIMENSION: dim_customer ─────────────────────────────────────────────────
+DROP TABLE IF EXISTS `dwh-midterm-123456.retail_marts.dim_customer`;
 CREATE OR REPLACE VIEW `dwh-midterm-123456.retail_marts.dim_customer` AS
 SELECT
   user_id                                       AS customer_key,
@@ -38,6 +39,7 @@ SELECT
 FROM `dwh-midterm-123456.retail_staging.stg_users`;
 
 -- ── DIMENSION: dim_product ──────────────────────────────────────────────────
+DROP TABLE IF EXISTS `dwh-midterm-123456.retail_marts.dim_product`;
 CREATE OR REPLACE VIEW `dwh-midterm-123456.retail_marts.dim_product` AS
 SELECT
   product_id                                    AS product_key,
@@ -52,6 +54,7 @@ SELECT
 FROM `dwh-midterm-123456.retail_staging.stg_products`;
 
 -- ── FACT: fact_sales ────────────────────────────────────────────────────────
+DROP TABLE IF EXISTS `dwh-midterm-123456.retail_marts.fact_sales`;
 CREATE OR REPLACE VIEW `dwh-midterm-123456.retail_marts.fact_sales` AS
 SELECT
   oi.order_item_id,
