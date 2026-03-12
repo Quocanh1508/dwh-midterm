@@ -1,0 +1,60 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Full Pipeline Run (Refresh Data & Models)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Authenticate to Google Cloud
+        run: |
+          echo '${{ secrets.GCP_SA_KEY }}' > /tmp/gcp_key.json
+        
+      - name: Generate .env file
+        run: |
+          echo "GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}" > .env
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp_key.json" >> .env
+          echo "BQ_LOCATION=US" >> .env
+          echo "BQ_DATASET_RAW=retail_raw" >> .env
+          echo "BQ_DATASET_STAGING=retail_staging" >> .env
+          echo "BQ_DATASET_MARTS=retail_marts" >> .env
+
+      - name: Setup BigQuery Datasets
+        run: python scripts/setup_bq.py
+
+      - name: Seed Raw Data
+        # We limit seeding in CI to 50k rows per table to keep pipeline fast, 
+        # or use 0 for full data if you want the CD to maintain the full 400k rows.
+        run: python scripts/seed_data.py --limit 0
+
+      - name: dbt run (Deploy Views/Tables)
+        run: python scripts/run_dbt.py run
+
+      - name: dbt test (Verify Built Tables)
+        run: python scripts/run_dbt.py test
+
+      - name: Great Expectations Validation (Raw & Marts)
+        run: |
+          python scripts/run_ge.py raw_checkpoint
+          python scripts/run_ge.py mart_checkpoint
+
+      # Performance Testing / Explain runner will go here in Phase 6
+      # Webhook alerting will go here in Phase 7
