@@ -28,6 +28,10 @@ jobs:
         env:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
         run: |
+          if [ -z "$GCP_SA_KEY" ]; then
+            echo "❌ ERROR: GCP_SA_KEY secret is empty or missing! Please add it to GitHub Settings -> Secrets -> Actions."
+            exit 1
+          fi
           python -c "import os; f=open('/tmp/gcp_key.json', 'w'); f.write(os.environ['GCP_SA_KEY']); f.close()"
         
       - name: Generate .env file
