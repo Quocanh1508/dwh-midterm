@@ -70,13 +70,7 @@ def main() -> None:
     print("\n🔧 Step 2 – Creating raw-layer tables")
     run_ddl_file(sql_dir / "ddl_raw.sql")
 
-    print("\n🔧 Step 3 – Creating staging-layer views")
-    run_ddl_file(sql_dir / "ddl_staging.sql")
-
-    print("\n🔧 Step 4 – Creating marts-layer tables/views")
-    run_ddl_file(sql_dir / "ddl_marts.sql")
-
-    print("\n🎉 BigQuery setup complete!\n")
+    print("\n🎉 BigQuery setup complete! (Staging and Marts will be built by dbt)\n")
 
 
 if __name__ == "__main__":
