@@ -1,0 +1,53 @@
+# ── Python ─────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.Python
+env/
+venv/
+.venv/
+ENV/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ── Virtual Environments ────────────────────────────────────────────────────
+.env
+!.env.example
+
+# ── dbt ─────────────────────────────────────────────────────────────────────
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+dbt/.user.yml
+
+# ── Great Expectations ────────────────────────────────────────────────────
+great_expectations/uncommitted/
+great_expectations/.ge_store_backend_id
+
+# ── GCP / Credentials ─────────────────────────────────────────────────────
+*.json
+!dbt/profiles.yml.example
+service_account*.json
+gcp_key*.json
+
+# ── JMeter ────────────────────────────────────────────────────────────────
+performance/*.jtl
+performance/*.log
+
+# ── OS ────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE ───────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
