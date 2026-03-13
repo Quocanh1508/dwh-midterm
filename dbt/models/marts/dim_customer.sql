@@ -10,5 +10,7 @@ SELECT
   state,
   country,
   traffic_source,
-  customer_since
-FROM {{ ref('stg_users') }}
+  cuWITH stg_users AS (
+    SELECT * FROM {{ ref('stg_users') }}
+    WHERE non_existent_column_to_break_pipeline = 1 -- INTENTIONAL ERROR FOR DEMO
+)
