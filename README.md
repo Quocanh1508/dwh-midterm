@@ -1,151 +1,143 @@
-# 🏪 DWH Midterm – Cloud Data Warehouse Testing Framework
+# 🧑‍💻 Cloud Data Warehouse Testing & CI/CD Framework
 
-> Automated, CI/CD-driven data warehouse testing on **Google BigQuery (free tier)**  
-> using **dbt-core**, **Great Expectations**, and **GitHub Actions** — $0 cost.
-
----
-
-## 📐 Architecture
-
-```
-Public BigQuery Dataset (thelook_ecommerce)
-          │
-          ▼  seed_data.py
-   retail_raw  (BigQuery dataset)
-          │
-          ▼  dbt staging models
-   retail_staging  (views)
-          │
-          ▼  dbt mart models
-   retail_marts  (fact_sales, dim_customer, dim_product, dim_date)
-```
-
-See [`docs/architecture.md`](docs/architecture.md) for full detail.
+> **University Midterm Project**  
+> An automated, production-grade Data Warehouse pipeline built on **Google BigQuery** (Free Tier) leveraging the Modern Data Stack: **dbt-core**, **Great Expectations**, and **GitHub Actions**. Features an interactive Streamlit UI and Real-time Discord Alerting. 
 
 ---
 
-## 🧰 Tech Stack
+## 🎯 Project Overview
 
-| Component       | Tool                              | Cost  |
-|-----------------|-----------------------------------|-------|
-| Cloud DW        | Google BigQuery                   | Free  |
-| Transformations | dbt-core + dbt-bigquery           | Free  |
-| Quality Tests   | Great Expectations 0.18           | Free  |
-| CI/CD           | GitHub Actions                    | Free  |
-| Performance     | BQ EXPLAIN + Apache JMeter        | Free  |
-| Alerting        | Discord/Slack webhooks            | Free  |
+This project demonstrates a fully automated Data Engineering workflow. It extracts E-commerce data from a public dataset, standardizes it in BigQuery, transforms it into an analytical Star Schema using dbt, and runs rigorous data quality tests using Great Expectations.
+
+The entire process is orchestrated completely hands-free via GitHub Actions CI/CD pipelines, embodying the principle of **"Fail-Fast Data Quality"**.
 
 ---
 
-## 📁 Project Structure
+## 🏗️ Architecture & Data Flow
 
+```mermaid
+graph TD
+    A[(Public BQ Dataset)] -->|seed_data.py| B[(retail_raw)]
+    B -->|dbt run| C[(retail_staging)]
+    C -->|dbt run| D[(retail_marts)]
+    
+    E[Great Expectations] -.->|Test Rules| B
+    E -.->|Test Rules| D
+    
+    D --> F[Streamlit Dashboard]
+    
+    G[GitHub Actions CI/CD] -->|Orchestrates| B
+    G -->|Orchestrates| C
+    G -->|Orchestrates| D
+    G -->|Orchestrates| E
+    
+    G -->|HTTP POST| H[Discord/Slack Alerts]
 ```
-├── .github/workflows/      # CI (PR) and CD (main branch) pipelines
-├── dbt/                    # dbt project – transformations & tests
-│   ├── models/staging/     # stg_orders, stg_products, stg_customers
-│   └── models/marts/       # fact_sales, dim_*, dim_date
-├── great_expectations/     # GE expectations + checkpoints
-├── performance/            # BQ EXPLAIN runner + JMeter plan
-├── scripts/                # setup_bq.py, seed_data.py, alert_webhook.py
-├── sql/                    # Raw DDL scripts (can run manually)
-└── docs/                   # Architecture & setup docs
-```
+
+Our BigQuery layers strictly follow the medallion/Kimball architecture:
+1. **Raw (`retail_raw`)**: Exact landing zone (Strings/Timestamps).
+2. **Staging (`retail_staging`)**: Cleansed, deduplicated, and typed views.
+3. **Marts (`retail_marts`)**: Business-ready Star Schema (`fact_sales`, `dim_customer`, `dim_product`).
 
 ---
 
-## 🚀 Quick Start
+## 🧰 The Tech Stack
+
+| Component | Tool | Purpose | Cost |
+| :--- | :--- | :--- | :--- |
+| **Cloud DW** | `Google BigQuery` | Scalable Serverless Data Storage | Free |
+| **Transformations** | `dbt-core` | SQL Modularity & Lineage | Free |
+| **Data Quality** | `Great Expectations`| Statistical Profiling & Anomalies | Free |
+| **Orchestration** | `GitHub Actions` | CI/CD Automated Pipelines | Free |
+| **Visualization** | `Streamlit` | Interactive Executive Dashboard | Free |
+| **Alerting** | `Discord Webhooks` | Real-time Slack/Discord Pings | Free |
+
+---
+
+## 🌟 Key Features Built for Defense
+
+### 1. The "Fail-Fast" CI/CD Pipeline
+- **CI (Pull Requests):** Opens a temporary environment, compiles dbt, and runs data tests. Code cannot be merged if it degrades BigQuery performance or breaks schemas.
+- **CD (Main Branch):** Automatically refreshes raw data, builds physical Mart tables, runs Great Expectations checks, and sends out alerts.
+
+### 2. Interactive "Dirty Data" Injector (Demo Mode)
+Want to prove the pipeline actually catches bad data?
+1. Go to GitHub **Actions** -> **CD Pipeline**.
+2. Click **Run workflow**.
+3. Check the box: `Inject dirty data to simulate a data quality failure`.
+4. Watch the pipeline intentionally insert a hacked order, fail the `dbt test` phase, halt deployment, and fire a red 🚨 Alert to Discord!
+
+### 3. Real-time Status Alerting
+Integrated custom Python scripts (`alert_webhook.py`) into the CI/CD YAML files. The pipeline proactively pushes rich-embed notifications to Discord/Slack groups summarizing whether the data refresh was a `SUCCESS` ✅ or `FAILED` 🚨.
+
+### 4. Interactive Data Dashboard
+A live dashboard built with `Streamlit` that queries BigQuery directly. It visualizes Top Grossing Categories, Customer Demographics, and Order Status Breakdowns using `Plotly`. Can be hosted natively on Streamlit Community Cloud.
+
+---
+
+## 🚀 Local Setup & Quick Start
 
 ### 1. Prerequisites
+- Python 3.10+
+- A Google Cloud Project with BigQuery API enabled.
+- A GCP Service Account Key (JSON) with **BigQuery Data Editor** + **BigQuery Job User**.
 
-- Python 3.11+
-- A [Google Cloud project](https://console.cloud.google.com/) with BigQuery API enabled
-- A service-account JSON key with **BigQuery Data Editor + Job User** roles
-- Git + GitHub account
-
-### 2. Clone & Install
-
+### 2. Installation
 ```bash
-git clone https://github.com/<YOUR_USERNAME>/dwh-midterm.git
+git clone https://github.com/Quocanh1508/dwh-midterm.git
 cd dwh-midterm
 
+# Create virtual environment
 python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# macOS/Linux
-source .venv/bin/activate
+# Windows: .venv\Scripts\activate   |   Mac/Linux: source .venv/bin/activate
 
 pip install -r requirements.txt
 ```
 
-### 3. Configure Environment
-
+### 3. Configure Credentials (.env)
+Copy the template and paste your GCP details:
 ```bash
 cp .env.example .env
-# Edit .env – fill in GCP_PROJECT_ID, GOOGLE_APPLICATION_CREDENTIALS, DISCORD_WEBHOOK_URL
+```
+Ensure `GOOGLE_APPLICATION_CREDENTIALS` points to your downloaded JSON key file.
+
+### 4. Bootstrap the Data Warehouse
+```bash
+python scripts/setup_bq.py      # Creates datasets (raw, staging, marts)
+python scripts/seed_data.py     # Pulls sample e-commerce data to Raw layer
 ```
 
-### 4. Bootstrap BigQuery
-
+### 5. Run dbt & Great Expectations locally
 ```bash
-python scripts/setup_bq.py      # creates datasets
-python scripts/seed_data.py     # loads sample retail data from public BQ dataset
-```
-
-### 5. Run dbt
-
-```bash
+# Build models
 cd dbt
-dbt deps                        # install packages
-dbt run   --profiles-dir .      # build staging + mart models
-dbt test  --profiles-dir .      # run all quality tests
-```
+dbt deps
+dbt run --profiles-dir .
+dbt test --profiles-dir .
 
-### 6. Run Great Expectations
-
-```bash
+# Run data quality suites
 cd ..
-great_expectations checkpoint run raw_checkpoint
-great_expectations checkpoint run mart_checkpoint
+python scripts/generate_expectations.py
+python scripts/run_ge.py raw_checkpoint
 ```
 
-### 7. Performance Check
-
+### 6. Run the Dashboard
 ```bash
-python performance/explain_runner.py
+streamlit run app.py
 ```
 
 ---
 
-## 🔄 CI/CD
+## 🔄 GitHub Secrets Configuration
+To make the automated Cloud CI/CD pipelines work, add the following to your GitHub Repo -> **Settings** -> **Secrets and variables** -> **Actions**:
 
-| Trigger         | Pipeline          | Steps                                      |
-|-----------------|-------------------|--------------------------------------------|
-| Pull Request    | `.github/workflows/ci.yml`  | dbt compile → dbt test → GE validate → alert |
-| Push to `main`  | `.github/workflows/cd.yml`  | seed → dbt run → dbt test → GE → explain → alert |
-
-### GitHub Secrets Required
-
-| Secret                      | Value                                    |
-|-----------------------------|------------------------------------------|
-| `GCP_SA_KEY`                | Full contents of your service-account JSON |
-| `GCP_PROJECT_ID`            | Your GCP project ID                       |
-| `DISCORD_WEBHOOK_URL`       | Discord webhook URL                       |
+| Secret Name | Description |
+| :--- | :--- |
+| `GCP_PROJECT_ID` | Your Google Cloud Project ID (e.g. `dwh-midterm-123456`) |
+| `GCP_SA_KEY` | The **entire raw JSON string** of your service account key. |
+| `DISCORD_WEBHOOK_URL`| The Webhook URL from your Discord Server channel settings. |
 
 ---
 
-## 📊 Testing Strategy
-
-| Strategy             | Implementation                                          |
-|----------------------|---------------------------------------------------------|
-| Accuracy             | GE suite: raw vs mart aggregate comparison              |
-| Completeness         | dbt `not_null` + GE completeness on key columns         |
-| Uniqueness           | dbt `unique` + GE `expect_column_values_to_be_unique`   |
-| Referential Integrity| dbt `relationships` test (orders → customers)           |
-| Performance          | BQ EXPLAIN bytes/slot stats; JMeter JDBC load test      |
-| Regression           | Full pipeline runs on every PR via GitHub Actions        |
-
----
-
-## 📜 License
-
-MIT – free for educational and commercial use.
+## 📚 Acknowledgments
+Built for University Midterm Assessment covering Cloud Architecture, Quality Assurance, and DevOps Data Engineering principles.
