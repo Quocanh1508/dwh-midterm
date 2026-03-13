@@ -49,6 +49,9 @@ jobs:
       - name: dbt test (Validate constraints on current data)
         run: python scripts/run_dbt.py test
 
+      - name: Generate Expectation Suites
+        run: python scripts/generate_expectations.py
+
       - name: Great Expectations (Raw Data)
         run: python scripts/run_ge.py raw_checkpoint
 

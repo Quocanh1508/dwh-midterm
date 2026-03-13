@@ -57,6 +57,9 @@ jobs:
       - name: dbt test (Verify Built Tables)
         run: python scripts/run_dbt.py test
 
+      - name: Generate Expectation Suites
+        run: python scripts/generate_expectations.py
+
       - name: Great Expectations Validation (Raw & Marts)
         run: |
           python scripts/run_ge.py raw_checkpoint
