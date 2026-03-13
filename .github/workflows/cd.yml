@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      inject_dirty_data:
+        description: 'Inject dirty data to simulate a data quality failure'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   deploy:
@@ -61,6 +68,10 @@ jobs:
         # We limit seeding in CI to 50k rows per table to keep pipeline fast, 
         # or use 0 for full data if you want the CD to maintain the full 400k rows.
         run: python scripts/seed_data.py --limit 0
+
+      - name: Inject Dirty Data (Demo)
+        if: ${{ github.event.inputs.inject_dirty_data == 'true' }}
+        run: python scripts/inject_dirty_data.py
 
       - name: dbt run (Deploy Views/Tables)
         run: python scripts/run_dbt.py run
