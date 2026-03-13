@@ -32,7 +32,18 @@ jobs:
             echo "❌ ERROR: GCP_SA_KEY secret is empty or missing! Please add it to GitHub Settings -> Secrets -> Actions."
             exit 1
           fi
-          python -c "import os; f=open('/tmp/gcp_key.json', 'w'); f.write(os.environ['GCP_SA_KEY']); f.close()"
+          python -c "
+          import os, json, sys
+          key = os.environ.get('GCP_SA_KEY', '')
+          try:
+              json.loads(key)
+          except Exception as e:
+              print('❌ ERROR: GCP_SA_KEY secret on GitHub is NOT valid JSON! You likely pasted an empty line or malformed text.')
+              print(f'JSON Error: {e}')
+              sys.exit(1)
+          with open('/tmp/gcp_key.json', 'w') as f:
+              f.write(key)
+          "
         
       - name: Generate .env file
         run: |
