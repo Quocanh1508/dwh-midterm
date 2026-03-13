@@ -11,8 +11,13 @@ google-cloud-bigquery-storage==2.26.0
 google-auth==2.34.0
 db-dtypes==1.3.0
 
-# ── SQLAlchemy (GE datasource) ────────────────────────────────────────────
+# ── SQLAlchemy (GE datasource) ────────────────────────────────────────────# Database / Driver
 sqlalchemy==1.4.54
+
+# Dashboard UI
+streamlit
+pandas
+plotly
 sqlalchemy-bigquery==1.11.0
 pyarrow==17.0.0
 
