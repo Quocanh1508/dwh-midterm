@@ -106,6 +106,19 @@ def load_order_status():
     """
     return client.query(query).to_dataframe(create_bqstorage_client=False)
 
+@st.cache_data(ttl=3600)
+def load_schema():
+    query = f"""
+        SELECT 
+            table_name, 
+            column_name, 
+            data_type 
+        FROM `{PROJECT_ID}.retail_marts.INFORMATION_SCHEMA.COLUMNS`
+        WHERE table_name IN ('dim_customer', 'dim_product', 'fact_sales')
+        ORDER BY table_name, ordinal_position
+    """
+    return client.query(query).to_dataframe(create_bqstorage_client=False)
+
 # ── Render Dashboard ────────────────────────────────────────────────────────
 with st.spinner("Loading Data Warehouse Metrics form BigQuery..."):
     try:
@@ -114,6 +127,7 @@ with st.spinner("Loading Data Warehouse Metrics form BigQuery..."):
         df_cat  = load_top_categories()
         df_demo = load_customer_demographics()
         df_status = load_order_status()
+        df_schema = load_schema()
     except Exception as e:
         st.error(f"Error querying BigQuery: {e}")
         st.stop()
@@ -183,6 +197,23 @@ with col_lower2:
     )
     fig_status.update_traces(textposition='inside', textinfo='percent+label')
     st.plotly_chart(fig_status, use_container_width=True)
+
+st.divider()
+
+# Schema Documentation Section
+with st.expander("🔍 View Data Warehouse Schema (Marts Layer)"):
+    st.markdown("Auto-generated documentation from BigQuery `INFORMATION_SCHEMA`")
+    col_s1, col_s2, col_s3 = st.columns(3)
+    
+    with col_s1:
+        st.markdown("**`fact_sales`**")
+        st.dataframe(df_schema[df_schema['table_name'] == 'fact_sales'][['column_name', 'data_type']], hide_index=True)
+    with col_s2:
+        st.markdown("**`dim_customer`**")
+        st.dataframe(df_schema[df_schema['table_name'] == 'dim_customer'][['column_name', 'data_type']], hide_index=True)
+    with col_s3:
+        st.markdown("**`dim_product`**")
+        st.dataframe(df_schema[df_schema['table_name'] == 'dim_product'][['column_name', 'data_type']], hide_index=True)
 
 st.divider()
 st.caption("Data is pulled live from the Google BigQuery Data Warehouse `retail_marts` layer.")
