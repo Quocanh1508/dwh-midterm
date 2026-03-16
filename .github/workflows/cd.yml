@@ -98,13 +98,17 @@ jobs:
 
       - name: Alert on Success
         if: success()
+        env:
+          CHAOS_MODE: ${{ github.event.inputs.chaos_mode || 'none (push)' }}
         run: |
           echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> .env
           echo "SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}" >> .env
-          python scripts/alert_webhook.py success "🚀 Main Depoyment Complete! Data refreshed, models built, tests passed."
+          python scripts/alert_webhook.py success "🚀 Main Deployment Complete! Data refreshed, models built, tests passed."
 
       - name: Alert on Failure
         if: failure()
+        env:
+          CHAOS_MODE: ${{ github.event.inputs.chaos_mode || 'none (push)' }}
         run: |
           echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> .env
           echo "SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}" >> .env

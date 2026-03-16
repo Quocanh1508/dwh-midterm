@@ -20,12 +20,28 @@ from dotenv import load_dotenv
 def send_discord_webhook(url: str, status: str, message: str):
     color = 3066993 if status == "success" else 15158332 # Green vs Red
     
+    # Extract metadata from environment
+    chaos_mode = os.environ.get("CHAOS_MODE", "None")
+    run_id = os.environ.get("GITHUB_RUN_ID", "local")
+    repo = os.environ.get("GITHUB_REPOSITORY", "Unknown")
+    run_url = f"https://github.com/{repo}/actions/runs/{run_id}"
+    
+    fields = [
+        {"name": "Status", "value": "✅ Success" if status == "success" else "🚨 Failure", "inline": True},
+        {"name": "Chaos Mode", "value": f"`{chaos_mode}`", "inline": True},
+    ]
+    
+    if status == "failure":
+        fields.append({"name": "Run Diagnostics", "value": f"[View Detailed Logs]({run_url})", "inline": False})
+
     payload = {
         "embeds": [
             {
-                "title": f"DWH Pipeline: {status.upper()}",
+                "title": f"🛒 Retail DWH: {status.upper()}",
                 "description": message,
-                "color": color
+                "color": color,
+                "fields": fields,
+                "footer": {"text": f"Repo: {repo} | Run ID: {run_id}"}
             }
         ]
     }
@@ -39,9 +55,10 @@ def send_discord_webhook(url: str, status: str, message: str):
 
 def send_slack_webhook(url: str, status: str, message: str):
     emoji = "✅" if status == "success" else "❌"
+    chaos_mode = os.environ.get("CHAOS_MODE", "None")
     
     payload = {
-        "text": f"{emoji} *DWH Pipeline: {status.upper()}*\n{message}"
+        "text": f"{emoji} *DWH Pipeline: {status.upper()}*\n*Chaos Mode:* `{chaos_mode}`\n{message}"
     }
 
     try:
