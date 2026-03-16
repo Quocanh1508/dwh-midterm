@@ -36,6 +36,14 @@ models:
           - unique
           - not_null
 
+  - name: dim_distribution_center
+    description: "Distribution Center dimension table"
+    columns:
+      - name: dc_key
+        tests:
+          - unique
+          - not_null
+
   - name: dim_product
     description: "Product dimension"
     columns:
@@ -43,6 +51,13 @@ models:
         tests:
           - unique
           - not_null
+      - name: distribution_center_id
+        description: "Foreign key to dim_distribution_center"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_distribution_center')
+              field: dc_key
 
   - name: dim_date
     description: "Date dimension"

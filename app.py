@@ -10,7 +10,16 @@ import plotly.express as px
 st.set_page_config(page_title="DWH Midterm Dashboard", page_icon="🛒", layout="wide")
 
 # Load environment using same .env as the pipeline
-load_dotenv(pathlib.Path(__file__).parent / ".env")
+env_path = pathlib.Path(__file__).parent / ".env"
+load_dotenv(env_path)
+
+# Handle relative paths in GOOGLE_APPLICATION_CREDENTIALS
+if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
+    cred_path = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
+    if cred_path.startswith("./") or cred_path.startswith(".\\"):
+        # Convert to absolute path relative to the app directory
+        abs_cred_path = str((pathlib.Path(__file__).parent / cred_path.lstrip("./\\")).absolute())
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = abs_cred_path
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "YOUR_PROJECT_ID")
 st.title(f"🛒 Retail Data Warehouse Dashboard")
@@ -23,18 +32,22 @@ from google.oauth2 import service_account
 @st.cache_resource
 def get_bq_client():
     try:
-        # 1. Try Streamlit Cloud Secrets first
-        if "gcp_service_account" in st.secrets:
-            credentials = service_account.Credentials.from_service_account_info(
-                dict(st.secrets["gcp_service_account"])
-            )
-            return bigquery.Client(credentials=credentials, project=PROJECT_ID)
-        # 2. Fallback to Local Environment variables
-        else:
-            return bigquery.Client(project=PROJECT_ID)
+        # 1. Try Streamlit Cloud Secrets first (wrapped in try/except to avoid local issues)
+        try:
+            if hasattr(st, "secrets") and "gcp_service_account" in st.secrets:
+                credentials = service_account.Credentials.from_service_account_info(
+                    dict(st.secrets["gcp_service_account"])
+                )
+                return bigquery.Client(credentials=credentials, project=PROJECT_ID)
+        except Exception:
+            # If st.secrets is not available or errors out, fall back to environment variables
+            pass
+            
+        # 2. Fallback to Local Environment variables (respecting GOOGLE_APPLICATION_CREDENTIALS)
+        return bigquery.Client(project=PROJECT_ID)
     except Exception as e:
         st.error(f"Failed to initialize BigQuery client: {e}")
-        st.info("Make sure .env is configured or Streamlit Secrets are set.")
+        st.info("Make sure .env is configured with absolute paths or Streamlit Secrets are set.")
         st.stop()
 
 client = get_bq_client()
@@ -107,6 +120,20 @@ def load_order_status():
     return client.query(query).to_dataframe(create_bqstorage_client=False)
 
 @st.cache_data(ttl=3600)
+def load_warehouse_data():
+    query = f"""
+        SELECT 
+            dc.dc_name,
+            dc.latitude,
+            dc.longitude,
+            COUNT(p.product_key) as product_count
+        FROM `{PROJECT_ID}.retail_marts.dim_distribution_center` dc
+        LEFT JOIN `{PROJECT_ID}.retail_marts.dim_product` p ON dc.dc_key = p.distribution_center_id
+        GROUP BY 1, 2, 3
+    """
+    return client.query(query).to_dataframe(create_bqstorage_client=False)
+
+@st.cache_data(ttl=3600)
 def load_schema():
     query = f"""
         SELECT 
@@ -114,7 +141,7 @@ def load_schema():
             column_name, 
             data_type 
         FROM `{PROJECT_ID}.retail_marts.INFORMATION_SCHEMA.COLUMNS`
-        WHERE table_name IN ('dim_customer', 'dim_product', 'fact_sales')
+        WHERE table_name IN ('dim_customer', 'dim_product', 'fact_sales', 'dim_distribution_center', 'dim_date')
         ORDER BY table_name, ordinal_position
     """
     return client.query(query).to_dataframe(create_bqstorage_client=False)
@@ -127,6 +154,7 @@ with st.spinner("Loading Data Warehouse Metrics form BigQuery..."):
         df_cat  = load_top_categories()
         df_demo = load_customer_demographics()
         df_status = load_order_status()
+        df_warehouse = load_warehouse_data()
         df_schema = load_schema()
     except Exception as e:
         st.error(f"Error querying BigQuery: {e}")
@@ -200,6 +228,28 @@ with col_lower2:
 
 st.divider()
 
+# Warehouse Insights Section
+st.header("🏢 Global Warehouse Intelligence")
+col_w_left, col_w_right = st.columns([1, 1])
+
+with col_w_left:
+    st.subheader("📦 Products per Distribution Center")
+    fig_dc = px.bar(
+        df_warehouse,
+        x='product_count', y='dc_name',
+        orientation='h',
+        labels={'product_count': 'Unique Products', 'dc_name': 'Warehouse Name'},
+        color='product_count', color_continuous_scale='Viridis'
+    )
+    fig_dc.update_layout(yaxis={'categoryorder':'total ascending'})
+    st.plotly_chart(fig_dc, use_container_width=True)
+
+with col_w_right:
+    st.subheader("📍 Global Warehouse Locations")
+    st.map(df_warehouse[['latitude', 'longitude']])
+
+st.divider()
+
 # Schema Documentation Section
 with st.expander("🔍 View Data Warehouse Schema (Marts Layer)"):
     st.markdown("Auto-generated documentation from BigQuery `INFORMATION_SCHEMA`")
@@ -214,6 +264,14 @@ with st.expander("🔍 View Data Warehouse Schema (Marts Layer)"):
     with col_s3:
         st.markdown("**`dim_product`**")
         st.dataframe(df_schema[df_schema['table_name'] == 'dim_product'][['column_name', 'data_type']], hide_index=True)
+    
+    col_s4, col_s5 = st.columns(2)
+    with col_s4:
+        st.markdown("**`dim_distribution_center`**")
+        st.dataframe(df_schema[df_schema['table_name'] == 'dim_distribution_center'][['column_name', 'data_type']], hide_index=True)
+    with col_s5:
+        st.markdown("**`dim_date`**")
+        st.dataframe(df_schema[df_schema['table_name'] == 'dim_date'][['column_name', 'data_type']], hide_index=True)
 
 st.divider()
 st.caption("Data is pulled live from the Google BigQuery Data Warehouse `retail_marts` layer.")

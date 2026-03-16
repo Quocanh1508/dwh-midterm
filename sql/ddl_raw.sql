@@ -83,3 +83,15 @@ CREATE TABLE IF NOT EXISTS `dwh-midterm-123456.retail_raw.users` (
 OPTIONS (
   description = "Raw users/customers from thelook_ecommerce public dataset"
 );
+
+-- 5. DISTRIBUTION CENTERS ----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `dwh-midterm-123456.retail_raw.distribution_centers` (
+  id                STRING    NOT NULL,
+  name              STRING,
+  latitude          FLOAT64,
+  longitude         FLOAT64,
+  _loaded_at        TIMESTAMP  DEFAULT CURRENT_TIMESTAMP()
+)
+OPTIONS (
+  description = "Raw distribution centers from thelook_ecommerce public dataset"
+);

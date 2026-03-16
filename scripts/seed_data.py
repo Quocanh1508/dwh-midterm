@@ -103,6 +103,17 @@ SEED_PLAN = [
             CURRENT_TIMESTAMP()   AS _loaded_at
         """,
     ),
+    (
+        "distribution_centers",
+        f"`{SOURCE_DS}.distribution_centers`",
+        """
+            CAST(id AS STRING),
+            name,
+            latitude,
+            longitude,
+            CURRENT_TIMESTAMP()   AS _loaded_at
+        """,
+    ),
 ]
 
 

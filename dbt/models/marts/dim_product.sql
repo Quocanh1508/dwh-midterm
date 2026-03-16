@@ -7,5 +7,6 @@ SELECT
   cost,
   retail_price,
   gross_margin,
-  sku
+  sku,
+  distribution_center_id
 FROM {{ ref('stg_products') }}
