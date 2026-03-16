@@ -6,11 +6,17 @@ on:
       - main
   workflow_dispatch:
     inputs:
-      inject_dirty_data:
-        description: 'Inject dirty data to simulate a data quality failure'
-        required: false
-        type: boolean
-        default: false
+      chaos_mode:
+        description: 'Simulate a Pipeline Failure (Chaos Mode)'
+        required: true
+        type: choice
+        default: 'none'
+        options:
+          - 'none'
+          - 'status'
+          - 'quantity'
+          - 'orphan'
+          - 'location'
 
 jobs:
   deploy:
@@ -69,9 +75,9 @@ jobs:
         # or use 0 for full data if you want the CD to maintain the full 400k rows.
         run: python scripts/seed_data.py --limit 0
 
-      - name: Inject Dirty Data (Demo)
-        if: ${{ github.event.inputs.inject_dirty_data == 'true' }}
-        run: python scripts/inject_dirty_data.py
+      - name: Inject Dirty Data (Chaos Mode)
+        if: ${{ github.event.inputs.chaos_mode != 'none' }}
+        run: python scripts/chaos_injector.py --mode ${{ github.event.inputs.chaos_mode }}
 
       - name: dbt run (Deploy Views/Tables)
         run: python scripts/run_dbt.py run

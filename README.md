@@ -60,12 +60,12 @@ Our BigQuery layers strictly follow the medallion/Kimball architecture:
 - **CI (Pull Requests):** Opens a temporary environment, compiles dbt, and runs data tests. Code cannot be merged if it degrades BigQuery performance or breaks schemas.
 - **CD (Main Branch):** Automatically refreshes raw data, builds physical Mart tables, runs Great Expectations checks, and sends out alerts.
 
-### 2. Interactive "Dirty Data" Injector (Demo Mode)
+### 2. Interactive "Chaos Mode" Failure Demo
 Want to prove the pipeline actually catches bad data?
 1. Go to GitHub **Actions** -> **CD Pipeline**.
 2. Click **Run workflow**.
-3. Check the box: `Inject dirty data to simulate a data quality failure`.
-4. Watch the pipeline intentionally insert a hacked order, fail the `dbt test` phase, halt deployment, and fire a red 🚨 Alert to Discord!
+3. Under **Simulate a Pipeline Failure**, choose a failure scenario (e.g., `orphan` or `status`).
+4. Watch the pipeline intentionally insert bad records, fail the designated test phase, and fire a rich alert to Discord!
 
 ### 3. Real-time Status Alerting
 Integrated custom Python scripts (`alert_webhook.py`) into the CI/CD YAML files. The pipeline proactively pushes rich-embed notifications to Discord/Slack groups summarizing whether the data refresh was a `SUCCESS` ✅ or `FAILED` 🚨.
