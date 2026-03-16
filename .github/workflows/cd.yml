@@ -76,8 +76,8 @@ jobs:
         run: python scripts/seed_data.py --limit 0
 
       - name: Inject Dirty Data (Chaos Mode)
-        if: ${{ github.event.inputs.chaos_mode != 'none' }}
-        run: python scripts/chaos_injector.py --mode ${{ github.event.inputs.chaos_mode }}
+        if: ${{ github.event.inputs.chaos_mode != 'none' && github.event.inputs.chaos_mode != '' }}
+        run: python scripts/chaos_injector.py --mode ${{ github.event.inputs.chaos_mode || 'none' }}
 
       - name: dbt run (Deploy Views/Tables)
         run: python scripts/run_dbt.py run
